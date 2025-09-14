@@ -37,6 +37,7 @@ class TradingEnv(gym.Env):
             self.shares = 0
             self.last_price = self.df.loc[self.current_step, "Close"]
             self.equity = self.balance
+            self.reward = 0
 
             obs = self._get_obsercation()
             info = {"balance": self.balance, "shares": self.shares, "equity": self.equity}
@@ -55,19 +56,28 @@ class TradingEnv(gym.Env):
         if action == 0 and self.shares > 0:
             self.balance = self.shares * price * (1 - self.fee)
             self.shares = 0
-        
+
+
         self.equity = self.balance + self.shares * price
 
-        reward = (self.equity - prev_equity) / prev_equity
+        # self.reward = (self.equity - prev_equity) / prev_equity
+        
+        log_r = self.df.loc[self.current_step, "log_return"]
+        position = 1 if self.shares > 0 else 0
+        self.reward = position * log_r
+
+        if action == 1:  # HOLD
+            self.reward -= 0.0001
+
 
         self.current_step += 1
         terminated = self.current_step >= len(self.df) - 1
         truncated = False
 
         obs = self._get_obsercation()
-        info = {"balance": self.balance, "shares": self.shares, "equity": self.equity}
+        info = {"balance": self.balance, "shares": self.shares, "equity": self.equity, "price": price, "reward": self.reward}
 
-        return obs, reward, terminated, truncated, info
+        return obs, self.reward, terminated, truncated, info
     
     def render(self):
         print(f"Step: {self.current_step}, Equity: {self.equity:.2f}")
