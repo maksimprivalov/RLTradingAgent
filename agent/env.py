@@ -58,7 +58,7 @@ class TradingEnv(gym.Env):
         
         self.equity = self.balance + self.shares * price
 
-        reward = self.equity - prev_equity
+        reward = (self.equity - prev_equity) / prev_equity
 
         self.current_step += 1
         terminated = self.current_step >= len(self.df) - 1
@@ -68,6 +68,9 @@ class TradingEnv(gym.Env):
         info = {"balance": self.balance, "shares": self.shares, "equity": self.equity}
 
         return obs, reward, terminated, truncated, info
+    
+    def render(self):
+        print(f"Step: {self.current_step}, Equity: {self.equity:.2f}")
 
 # testing with random operations
 if __name__ == "__main__":
