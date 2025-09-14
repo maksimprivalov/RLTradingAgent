@@ -16,7 +16,7 @@ class TradingEnv(gym.Env):
 
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf,
-            shape=(self.window_size * 3,),
+            shape=(self.window_size * 13,),
             dtype=np.float32
         )
 
@@ -25,7 +25,10 @@ class TradingEnv(gym.Env):
     # return features for past 30 days
     def _get_obsercation(self):
         frame = self.df.loc[self.current_step - self.window_size:self.current_step - 1,
-                            ["log_return", "sma20", "sma50"]]
+                            ["log_return", "sma20", "sma50", "volatility20",
+                             "ema12", "ema26", "macd", "macd_signal", 
+                             "rsi14", "bollinger_mid", "bollinger_up", "bollinger_down",
+                             "volume_change"]]
         obs = frame.values.flatten()
         return obs.astype(np.float32)
 
@@ -61,13 +64,13 @@ class TradingEnv(gym.Env):
         self.equity = self.balance + self.shares * price
 
         # self.reward = (self.equity - prev_equity) / prev_equity
-        
+
         log_r = self.df.loc[self.current_step, "log_return"]
         position = 1 if self.shares > 0 else 0
         self.reward = position * log_r
 
-        if action == 1:  # HOLD
-            self.reward -= 0.0001
+        if action == 1 and position == 1:  
+            self.reward -= 0.001   
 
 
         self.current_step += 1

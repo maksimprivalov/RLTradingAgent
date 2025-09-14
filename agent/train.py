@@ -14,4 +14,4 @@ if __name__ == "__main__":
 
     model.save("ppo_trader")
 
-    print("✅ Обучение завершено, модель сохранена в ppo_trader.zip")
+    print("Learning completed result is in ppo_trader.zip")
