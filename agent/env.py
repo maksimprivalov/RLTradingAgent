@@ -48,30 +48,40 @@ class TradingEnv(gym.Env):
 
     def step(self, action):
         price = self.df.loc[self.current_step, "Close"]
-
         prev_equity = self.balance + self.shares * price
+        log_r = self.df.loc[self.current_step, "log_return"]
+        position = 1 if self.shares > 0 else 0
+        # self.reward = position * log_r
+        self.reward = 0
 
         if action == 2 and self.balance > 0:
             # buying with all money
+            self.reward += 0.001
             self.shares = (self.balance * (1 - self.fee)) / price
             self.balance = 0
+            self.last_price = price
         
+
+        self.equity = self.balance + self.shares * price
+        self.reward = (self.equity - prev_equity) / prev_equity - 0.1 * abs(log_r)
+
         if action == 0 and self.shares > 0:
+            # self.reward = (price - self.last_price) / self.last_price * 100
+            self.reward += 0.001
             self.balance = self.shares * price * (1 - self.fee)
             self.shares = 0
 
+        elif action == 1:  # HOLD
+            if position == 1:
+                self.reward -= 0.005 # toll for lazyness
+            else:
+                self.reward -= 0.01
+                # self.reward = log_r * 100
+            # else:
+            #     self.reward = -0.005 # toll for lazyness
 
-        self.equity = self.balance + self.shares * price
-
-        # self.reward = (self.equity - prev_equity) / prev_equity
-
-        log_r = self.df.loc[self.current_step, "log_return"]
-        position = 1 if self.shares > 0 else 0
-        self.reward = position * log_r
-
-        if action == 1 and position == 1:  
-            self.reward -= 0.001   
-
+        # volatility
+        self.reward -= 0.05 * abs(log_r)
 
         self.current_step += 1
         terminated = self.current_step >= len(self.df) - 1
