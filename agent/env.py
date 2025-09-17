@@ -54,28 +54,35 @@ class TradingEnv(gym.Env):
         # self.reward = position * log_r
         self.reward = 0
 
-        if action == 2 and self.balance > 0:
-            # buying with all money
-            self.reward += 0.001
-            self.shares = (self.balance * (1 - self.fee)) / price
-            self.balance = 0
-            self.last_price = price
+        if action == 2:
+            if(self.balance > 0):
+                # buying with all money
+                # self.reward += 0.001
+                self.shares = (self.balance * (1 - self.fee)) / price
+                self.balance = 0
+                self.last_price = price
+            else:
+                self.reward -= 1 # tuff barrier
         
 
         self.equity = self.balance + self.shares * price
-        self.reward = (self.equity - prev_equity) / prev_equity - 0.1 * abs(log_r)
+        # self.reward = (self.equity - prev_equity) / prev_equity - 0.1 * abs(log_r)
 
-        if action == 0 and self.shares > 0:
-            # self.reward = (price - self.last_price) / self.last_price * 100
-            self.reward += 0.001
-            self.balance = self.shares * price * (1 - self.fee)
-            self.shares = 0
+        if action == 0:
+            if(self.shares > 0):
+                # self.reward = (price - self.last_price) / self.last_price * 100
+                self.reward = ((self.shares * price * (1 - self.fee)) - (self.shares * self.last_price)) / (self.last_price * self.shares)
+                self.balance = self.shares * price * (1 - self.fee)
+                self.shares = 0
+            else:
+                self.reward -= 1
 
         elif action == 1:  # HOLD
             if position == 1:
-                self.reward -= 0.005 # toll for lazyness
+                self.reward += (price - self.last_price) / self.last_price
+                # self.reward -= 0.005 # toll for lazyness
             else:
-                self.reward -= 0.01
+                self.reward -= 1
                 # self.reward = log_r * 100
             # else:
             #     self.reward = -0.005 # toll for lazyness
