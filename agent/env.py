@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd 
 
 class TradingEnv(gym.Env):
-    def __init__(self, df, window_size=30, initial_balance=10_000, fee=0.001):
+    def __init__(self, df, window_size=30, initial_balance=10_000.0, fee=0.001):
         super(TradingEnv, self).__init__()
 
         self.df = df.reset_index(drop=True)
@@ -41,6 +41,7 @@ class TradingEnv(gym.Env):
             self.last_price = self.df.loc[self.current_step, "Close"]
             self.equity = self.balance
             self.reward = 0
+    
 
             obs = self._get_obsercation()
             info = {"balance": self.balance, "shares": self.shares, "equity": self.equity}
@@ -51,53 +52,59 @@ class TradingEnv(gym.Env):
         prev_equity = self.balance + self.shares * price
         log_r = self.df.loc[self.current_step, "log_return"]
         position = 1 if self.shares > 0 else 0
-        # self.reward = position * log_r
-        self.reward = 0.0
+        # reward = position * log_r
+        reward = 0.0
 
         if action == 2:
             if(self.balance > 0):
                 # buying with all money
-                self.reward += 0.1 # small reward for buying
+                reward += 0.3 # incentive for action
                 self.shares = (self.balance * (1 - self.fee)) / price
-                self.balance = 0
+                self.balance = 0.0
                 self.last_price = price
             else:
-                self.reward -= 0.3 # tuff barrier
+                reward -= 0.8 # tuff barrier for buying without money
         
 
-        self.equity = self.balance + self.shares * price
-        # self.reward = (self.equity - prev_equity) / prev_equity - 0.1 * abs(log_r)
-
+        # selling all shares
         if action == 0:
             if(self.shares > 0):
-                # self.reward = (price - self.last_price) / self.last_price * 100
-                self.reward = ((self.shares * price * (1 - self.fee)) - (self.shares * self.last_price)) / (self.last_price * self.shares)
+                # reward = (price - self.last_price) / self.last_price * 100
+                trade_profit = (price - self.last_price) / (self.last_price + 1e-9)
+                reward += 10.0 * trade_profit
+
+                # reward = ((self.shares * price * (1 - self.fee)) - (self.shares * self.last_price)) / (self.last_price * self.shares)
                 self.balance = self.shares * price * (1 - self.fee)
                 self.shares = 0
+
+                reward += -0.02 # toll for action
+                reward += 0.1
             else:
-                self.reward -= 0.3
+                reward -= 0.8 # tuff barrier for selling without shares
 
         elif action == 1:  # HOLD
             if position == 1:
-                self.reward += (price - self.last_price) / self.last_price
-                # self.reward -= 0.005 # toll for lazyness
+                reward += 3.0 * log_r
             else:
-                self.reward -= 0.3
-                # self.reward = log_r * 100
-            # else:
-            #     self.reward = -0.005 # toll for lazyness
+                reward -= 0.8
 
-        # volatility
-        # self.reward -= 0.05 * abs(log_r)
-        self.reward *= 30
+        self.equity = self.balance + self.shares * price
+        equity_change = (self.equity - prev_equity) / (prev_equity + 1e-9)
+        reward += 10.0 * equity_change # reward for equity growth
+
+        # pnl_step = (self.equity - prev_equity) / (prev_equity + 1e-9)
+        # reward += 10.0 * pnl_step # reward for PnL
+
+        reward += -0.2 * abs(log_r) # small penalty for volatility
+
         self.current_step += 1
         terminated = self.current_step >= len(self.df) - 1
         truncated = False
 
         obs = self._get_obsercation()
-        info = {"balance": self.balance, "shares": self.shares, "equity": self.equity, "price": price, "reward": self.reward}
+        info = {"balance": self.balance, "shares": self.shares, "equity": self.equity, "price": price, "reward": reward}
 
-        return obs, self.reward, terminated, truncated, info
+        return obs, reward, terminated, truncated, info
     
     def render(self):
         print(f"Step: {self.current_step}, Equity: {self.equity:.2f}")

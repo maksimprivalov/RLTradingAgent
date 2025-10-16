@@ -21,7 +21,7 @@ if __name__ == "__main__":
         tensorboard_log="./logs/"
     )
 
-    model.learn(total_timesteps=600_000)
+    model.learn(total_timesteps=400_000)
 
     model.save("ppo_trader")
 
