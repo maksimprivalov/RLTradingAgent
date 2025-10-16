@@ -17,10 +17,11 @@ if __name__ == "__main__":
         n_steps=2048,
         gamma=0.99,
         gae_lambda=0.95,
-        ent_coef=0.03,
+        ent_coef=0.02,
+        tensorboard_log="./logs/"
     )
 
-    model.learn(total_timesteps=100_000)
+    model.learn(total_timesteps=600_000)
 
     model.save("ppo_trader")
 

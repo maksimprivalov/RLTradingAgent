@@ -4,6 +4,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from env import TradingEnv
 import collections
+from tensorboard import program
 
 def evaluate_model(model, df, window_size=30):
     env = TradingEnv(df, window_size=window_size)
@@ -47,3 +48,10 @@ if __name__ == "__main__":
     plt.legend()
     plt.title("RL Agent vs Buy&Hold")
     plt.show()
+
+    print("\n🚀 Launching TensorBoard...")
+    tb = program.TensorBoard()
+    tb.configure(argv=[None, '--logdir', './logs'])
+    url = tb.launch()
+    print(f"✅ TensorBoard running at: {url}")
+    input("\nPress ENTER to close TensorBoard...\n")

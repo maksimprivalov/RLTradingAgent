@@ -52,17 +52,17 @@ class TradingEnv(gym.Env):
         log_r = self.df.loc[self.current_step, "log_return"]
         position = 1 if self.shares > 0 else 0
         # self.reward = position * log_r
-        self.reward = 0
+        self.reward = 0.0
 
         if action == 2:
             if(self.balance > 0):
                 # buying with all money
-                # self.reward += 0.001
+                self.reward += 0.1 # small reward for buying
                 self.shares = (self.balance * (1 - self.fee)) / price
                 self.balance = 0
                 self.last_price = price
             else:
-                self.reward -= 1 # tuff barrier
+                self.reward -= 0.3 # tuff barrier
         
 
         self.equity = self.balance + self.shares * price
@@ -75,21 +75,21 @@ class TradingEnv(gym.Env):
                 self.balance = self.shares * price * (1 - self.fee)
                 self.shares = 0
             else:
-                self.reward -= 1
+                self.reward -= 0.3
 
         elif action == 1:  # HOLD
             if position == 1:
                 self.reward += (price - self.last_price) / self.last_price
                 # self.reward -= 0.005 # toll for lazyness
             else:
-                self.reward -= 1
+                self.reward -= 0.3
                 # self.reward = log_r * 100
             # else:
             #     self.reward = -0.005 # toll for lazyness
 
         # volatility
-        self.reward -= 0.05 * abs(log_r)
-
+        # self.reward -= 0.05 * abs(log_r)
+        self.reward *= 30
         self.current_step += 1
         terminated = self.current_step >= len(self.df) - 1
         truncated = False
