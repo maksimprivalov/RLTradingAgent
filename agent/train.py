@@ -24,7 +24,7 @@ if __name__ == "__main__":
         gamma=0.99,
         gae_lambda=0.95,
         ent_coef=0.02,
-        tensorboard_log="./logs/"
+        tensorboard_log=log_dir
     )
 
     model.learn(total_timesteps=100_000)
