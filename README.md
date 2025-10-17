@@ -6,4 +6,4 @@ This project implements a reinforcement learning (RL) agent that learns how to t
 The agent is trained with PPO (Proximal Policy Optimization) from the `stable-baselines3` library and operates in a custom 
 Gymnasium environment.
 
-#### Check out `documentation.ipynb` if you're interested
+#### Check out `documentation.ipynb` if you're interested in
