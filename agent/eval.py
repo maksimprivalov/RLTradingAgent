@@ -6,7 +6,7 @@ from env import TradingEnv
 import collections
 from tensorboard import program
 
-def evaluate_model(model, df, window_size=30):
+def evaluate_model(model, df, window_size=15):
     env = TradingEnv(df, window_size=window_size)
     obs, info = env.reset()
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     model = PPO.load("ppo_trader")
 
-    agent_equity, actions = evaluate_model(model, df_test, window_size=30)
+    agent_equity, actions = evaluate_model(model, df_test, window_size=15)
 
     action_map = {0: "SELL", 1: "HOLD", 2: "BUY"}
     decoded_actions = [action_map[int(a)] for a in actions]

@@ -12,26 +12,19 @@ def load_data(ticker="MSFT", start="2015-01-01", end="2025-01-01"):
     df["sma20"] = df["Close"].rolling(window=20).mean()
     df["sma50"] = df["Close"].rolling(window=50).mean()
 
-    df["volatility20"] = df["log_return"].rolling(window=20).std()
-    df["ema12"] = df["Close"].ewm(span=12, adjust=False).mean()
-    df["ema26"] = df["Close"].ewm(span=26, adjust=False).mean()
-    df["macd"] = df["ema12"] - df["ema26"]
-    df["macd_signal"] = df["macd"].ewm(span=9, adjust=False).mean()
+    # --- MACD --- Moving Average Convergence Divergence
+    ema12 = df["Close"].ewm(span=12, adjust=False).mean()
+    ema26 = df["Close"].ewm(span=26, adjust=False).mean()
+    df["macd"] = ema12 - ema26
 
-    # RSI
+    # RSI 14 - Relative Strength Index
     delta = df["Close"].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / (loss + 1e-9)
     df["rsi14"] = 100 - (100 / (1 + rs))
 
-    # Bollinger Bands
-    df["bollinger_mid"] = df["Close"].rolling(20).mean()
-    df["bollinger_std"] = df["Close"].rolling(20).std()
-
-    df["bollinger_up"] = df["bollinger_mid"] + 2 * df["bollinger_std"]
-    df["bollinger_down"] = df["bollinger_mid"] - 2 * df["bollinger_std"]
-    
+    # Volume change 
     df["volume_change"] = df["Volume"].pct_change()
     
     df = df.reset_index()

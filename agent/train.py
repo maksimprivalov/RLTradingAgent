@@ -11,7 +11,7 @@ if __name__ == "__main__":
     os.makedirs(log_dir, exist_ok=True)
     
     env = DummyVecEnv([
-    lambda: Monitor(TradingEnv(df, window_size=30), log_dir)
+    lambda: Monitor(TradingEnv(df, window_size=15), log_dir)
 ])
 
     model = PPO(
